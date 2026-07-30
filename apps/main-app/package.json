@@ -1,0 +1,12 @@
+{
+  "name": "main-app",
+  "version": "1.0.0",
+  "description": "Main Node.js application",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

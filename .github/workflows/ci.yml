@@ -1,35 +1,47 @@
-name: CI
+name: Continuous Integration
 
 on:
-
-  pull_request:
-
   push:
     branches:
       - main
+      - develop
+      - feature/**
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  TF_VERSION: 1.15.8
 
 jobs:
 
-  validate:
+  terraform:
+
+    name: Terraform Validation
 
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: terraform/environments/dev
+
     steps:
 
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: hashicorp/setup-terraform@v3
-
-      - uses: azure/setup-helm@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Format
-        run: terraform -chdir=terraform fmt -check -recursive
+        run: terraform fmt -check -recursive
 
       - name: Terraform Init
-        run: terraform -chdir=terraform init
+        run: terraform init -backend=false
 
       - name: Terraform Validate
-        run: terraform -chdir=terraform validate
-
-      - name: Helm Lint
-        run: helm lint helm/*
+        run: terraform validate

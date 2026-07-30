@@ -1,0 +1,15 @@
+{
+  "extends": [
+    "config:recommended"
+  ],
+
+  "labels": [
+    "dependencies"
+  ],
+
+  "timezone": "Europe/London",
+
+  "schedule": [
+    "before 6am on monday"
+  ]
+}

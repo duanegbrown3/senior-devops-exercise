@@ -1,13 +1,23 @@
+# Terraform
 .terraform/
 *.tfstate
-*.tfstate.backup
-terraform.tfvars
+*.tfstate.*
+*.tfvars
 
+# Terraform plan
+*.plan
+
+# macOS
+.DS_Store
+
+# VSCode
 .vscode/
+
+# IntelliJ
 .idea/
 
-.env
+# Python
+__pycache__/
 
+# Logs
 *.log
-
-.DS_Store

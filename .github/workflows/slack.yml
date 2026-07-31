@@ -1,0 +1,22 @@
+name: Slack Notifications
+
+on:
+  workflow_run:
+    workflows:
+      - Docker Build and Publish
+    types:
+      - completed
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "Workflow '${{ github.event.workflow_run.name }}' completed with status '${{ github.event.workflow_run.conclusion }}'."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

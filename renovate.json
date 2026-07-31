@@ -1,15 +1,72 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+
   "extends": [
     "config:recommended"
   ],
 
   "labels": [
-    "dependencies"
+    "dependencies",
+    "renovate"
   ],
 
   "timezone": "Europe/London",
 
   "schedule": [
     "before 6am on monday"
+  ],
+
+  "dependencyDashboard": true,
+
+  "packageRules": [
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "groupName": "Docker Images"
+    },
+    {
+      "matchManagers": [
+        "terraform"
+      ],
+      "groupName": "Terraform"
+    },
+    {
+      "matchManagers": [
+        "npm"
+      ],
+      "groupName": "Node.js"
+    },
+    {
+      "matchManagers": [
+        "maven"
+      ],
+      "groupName": "Java"
+    },
+    {
+      "matchManagers": [
+        "pip_requirements"
+      ],
+      "groupName": "Python"
+    },
+    {
+      "matchUpdateTypes": [
+        "patch",
+        "minor"
+      ],
+      "automerge": true
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false
+    }
   ]
 }

@@ -1,0 +1,180 @@
+name: Build and Publish Docker Images
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+
+##############################################################################
+# BUILD
+##############################################################################
+
+  build:
+    name: Build Applications
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - auth-service
+          - main-app
+          - cleanup-job
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+#############################################################
+# Java
+#############################################################
+
+      - name: Setup Java
+        if: matrix.app == 'auth-service'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build Auth Service
+        if: matrix.app == 'auth-service'
+        working-directory: apps/auth-service
+        run: mvn -B clean package -DskipTests
+
+#############################################################
+# Node
+#############################################################
+
+      - name: Setup Node
+        if: matrix.app == 'main-app'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/main-app/package-lock.json
+
+      - name: Install Node Packages
+        if: matrix.app == 'main-app'
+        working-directory: apps/main-app
+        run: npm ci
+
+      - name: Build Main App
+        if: matrix.app == 'main-app'
+        working-directory: apps/main-app
+        run: npm run build --if-present
+
+#############################################################
+# Python
+#############################################################
+
+      - name: Setup Python
+        if: matrix.app == 'cleanup-job'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python Packages
+        if: matrix.app == 'cleanup-job'
+        working-directory: apps/cleanup-job
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validate Python
+        if: matrix.app == 'cleanup-job'
+        working-directory: apps/cleanup-job
+        run: python -m py_compile cleanup.py
+
+#############################################################
+# Docker
+#############################################################
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/${{ matrix.app }}
+          file: apps/${{ matrix.app }}/Dockerfile
+          push: false
+          load: true
+          tags: |
+            ${{ matrix.app }}:ci
+          labels: |
+            org.opencontainers.image.source=${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+#############################################################
+# Save image
+#############################################################
+
+      - name: Export Docker Image
+        run: |
+          docker save ${{ matrix.app }}:ci -o ${{ matrix.app }}.tar
+
+      - name: Upload Docker Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-image
+          path: ${{ matrix.app }}.tar
+
+##############################################################################
+# PUBLISH
+##############################################################################
+
+  publish:
+    name: Publish Images to ACR
+
+    if: github.ref == 'refs/heads/main'
+
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: images
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to Azure Container Registry
+        run: |
+          az acr login --name ${{ vars.ACR_NAME }}
+
+      - name: Load Docker Images
+        run: |
+          find images -name "*.tar" -exec docker load -i {} \;
+
+      - name: Tag Images
+        run: |
+          docker tag auth-service:ci ${{ vars.ACR_NAME }}.azurecr.io/auth-service:${{ github.sha }}
+          docker tag auth-service:ci ${{ vars.ACR_NAME }}.azurecr.io/auth-service:latest
+
+          docker tag main-app:ci ${{ vars.ACR_NAME }}.azurecr.io/main-app:${{ github.sha }}
+          docker tag main-app:ci ${{ vars.ACR_NAME }}.azurecr.io/main-app:latest
+
+          docker tag cleanup-job:ci ${{ vars.ACR_NAME }}.azurecr.io/cleanup-job:${{ github.sha }}
+          docker tag cleanup-job:ci ${{ vars.ACR_NAME }}.azurecr.io/cleanup-job:latest
+
+      - name: Push Images
+        run: |
+          docker push ${{ vars.ACR_NAME }}.azurecr.io/auth-service:${{ github.sha }}
+          docker push ${{ vars.ACR_NAME }}.azurecr.io/auth-service:latest
+
+          docker push ${{ vars.ACR_NAME }}.azurecr.io/main-app:${{ github.sha }}
+          docker push ${{ vars.ACR_NAME }}.azurecr.io/main-app:latest
+
+          docker push ${{ vars.ACR_NAME }}.azurecr.io/cleanup-job:${{ github.sha }}
+          docker push ${{ vars.ACR_NAME }}.azurecr.io/cleanup-job:latest

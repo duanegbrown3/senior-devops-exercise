@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+
+kind: CronJob
+
+metadata:
+  name: cleanup-job
+
+spec:
+  schedule: "0 2 * * *"
+
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 2
+
+  jobTemplate:
+
+    spec:
+
+      template:
+
+        spec:
+
+          restartPolicy: OnFailure
+
+          containers:
+
+            - name: cleanup-job
+
+              image: ${ACR_NAME}.azurecr.io/cleanup-job:IMAGE_TAG
+
+              imagePullPolicy: Always
+
+              env:
+
+                - name: CASSANDRA_HOST
+                  value: cassandra
+
+              resources:
+
+                requests:
+                  cpu: "250m"
+                  memory: "256Mi"
+
+                limits:
+                  cpu: "500m"
+                  memory: "512Mi"

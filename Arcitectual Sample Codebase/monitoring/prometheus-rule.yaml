@@ -1,0 +1,52 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+
+metadata:
+  name: application-alerts
+  namespace: monitoring
+
+spec:
+  groups:
+    - name: application.rules
+      rules:
+
+        - alert: AuthServiceDown
+          expr: up{job="auth-service"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: Auth Service is unavailable
+            description: Auth Service has not responded for 2 minutes.
+
+        - alert: MainAppDown
+          expr: up{job="main-app"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: Main Application is unavailable
+            description: Main App has not responded for 2 minutes.
+
+        - alert: CleanupJobFailed
+          expr: kube_job_status_failed > 0
+          labels:
+            severity: critical
+          annotations:
+            summary: Cleanup Job Failed
+
+        - alert: HighCPUUsage
+          expr: rate(container_cpu_usage_seconds_total[5m]) > 0.9
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: High CPU Usage
+
+        - alert: HighMemoryUsage
+          expr: container_memory_usage_bytes > 1000000000
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: High Memory Usage

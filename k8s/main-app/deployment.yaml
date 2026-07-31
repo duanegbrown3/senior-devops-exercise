@@ -24,7 +24,7 @@ spec:
 
         - name: main-app
 
-          image: acrdevopsdemo.azurecr.io/main-app:latest
+          image: ${ACR_NAME}.azurecr.io/main-app:IMAGE_TAG
 
           imagePullPolicy: Always
 

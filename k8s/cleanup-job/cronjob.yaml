@@ -25,7 +25,7 @@ spec:
 
             - name: cleanup-job
 
-              image: acrdevopsdemo.azurecr.io/cleanup-job:latest
+              image: ${ACR_NAME}.azurecr.io/cleanup-job:IMAGE_TAG
 
               imagePullPolicy: Always
 

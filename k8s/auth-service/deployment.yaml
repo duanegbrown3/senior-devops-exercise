@@ -24,7 +24,7 @@ spec:
       containers:
         - name: auth-service
 
-          image: acrdevopsdemo.azurecr.io/auth-service:latest
+          image: ${ACR_NAME}.azurecr.io/auth-service:IMAGE_TAG
 
           imagePullPolicy: Always
 

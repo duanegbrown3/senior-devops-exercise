@@ -5,55 +5,65 @@
     "config:recommended"
   ],
 
+  "timezone": "Europe/London",
+
+  "dependencyDashboard": true,
+
   "labels": [
     "dependencies",
     "renovate"
   ],
 
-  "timezone": "Europe/London",
+  "assignees": [],
+
+  "reviewers": [],
 
   "schedule": [
     "before 6am on monday"
   ],
 
-  "dependencyDashboard": true,
-
   "packageRules": [
     {
+      "description": "Group GitHub Actions",
       "matchManagers": [
         "github-actions"
       ],
       "groupName": "GitHub Actions"
     },
     {
-      "matchManagers": [
-        "dockerfile"
-      ],
-      "groupName": "Docker Images"
-    },
-    {
+      "description": "Group Terraform",
       "matchManagers": [
         "terraform"
       ],
       "groupName": "Terraform"
     },
     {
+      "description": "Group Docker",
       "matchManagers": [
-        "npm"
+        "dockerfile"
       ],
-      "groupName": "Node.js"
+      "groupName": "Docker Images"
     },
     {
+      "description": "Group Maven",
       "matchManagers": [
         "maven"
       ],
-      "groupName": "Java"
+      "groupName": "Java Dependencies"
     },
     {
+      "description": "Group Node",
+      "matchManagers": [
+        "npm"
+      ],
+      "groupName": "Node Dependencies"
+    },
+    {
+      "description": "Group Python",
       "matchManagers": [
         "pip_requirements"
       ],
-      "groupName": "Python"
+      "groupName": "Python Dependencies"
     },
     {
       "matchUpdateTypes": [
